@@ -80,6 +80,14 @@ async function run() {
             res.send(result);
         })
 
+        // delete donation campaigns api
+        app.delete('/createdonation/:id', async(req,res) =>{
+            const id = req.params.id;
+           const query = { _id: new ObjectId(id)}
+            const result = await createDonationCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // post Adopt pets
         app.post('/adoptPets', async (req, res) => {
             const item = req.body;
@@ -111,6 +119,14 @@ async function run() {
             const result = await petsCollection.findOne(query);
             res.send(result);
         });
+
+        // delete pets from data base
+        app.delete('/pets/:id', async(req,res) =>{
+            const id = req.params.id;
+           const query = { _id: new ObjectId(id)}
+            const result = await petsCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // category api
         app.get('/category', async (req, res) => {
