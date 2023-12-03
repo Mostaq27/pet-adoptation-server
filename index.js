@@ -60,7 +60,34 @@ async function run() {
         const usersCollection = client.db("petAdoptation").collection("users");
         const adoptPetsCollection = client.db("petAdoptation").collection("adoptPets");
         const createDonationCollection = client.db("petAdoptation").collection("createDonation");
+        const myDonationCollection = client.db("petAdoptation").collection("myDonation");
 
+
+        app.post('/mydonation', async (req, res) => {
+            const item = req.body;
+            const result = await myDonationCollection.insertOne(item);
+            res.send(result);
+        });
+
+        app.get('/mydonation', async (req, res) => {
+            const cursor = myDonationCollection.find().sort({ date: -1 });
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get('/mydonation/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await myDonationCollection.findOne(query);
+            res.send(result);
+        })
+
+        app.delete('/mydonation/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await myDonationCollection.deleteOne(query);
+            res.send(result);
+        })
 
         app.post('/createdonation', async (req, res) => {
             const item = req.body;
@@ -107,6 +134,20 @@ async function run() {
                 },
             };
             const result = await createDonationCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
+
+
+        app.patch('/pets/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                  adopted: true
+                },
+            };
+            const result = await petsCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
 
