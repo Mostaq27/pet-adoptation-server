@@ -4,7 +4,7 @@ require('dotenv').config();
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
-var jwt = require('jsonwebtoken');
+// var jwt = require('jsonwebtoken');
 
 
 // middleware 
@@ -12,23 +12,23 @@ app.use(cors())
 app.use(express.json());
 
 //jwt verify
-const verifyJWT = (req, res, next) => {
-    const authorization = req.headers.authorization;
-    if (!authorization) {
-        return res.status(401).send({ error: true, message: 'unauthorized access' });
-    }
+// const verifyJWT = (req, res, next) => {
+//     const authorization = req.headers.authorization;
+//     if (!authorization) {
+//         return res.status(401).send({ error: true, message: 'unauthorized access' });
+//     }
 
-    // bearer token
-    const token = authorization.split(' ')[1];
+//     // bearer token
+//     const token = authorization.split(' ')[1];
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).send({ error: true, message: 'unauthorized access' })
-        }
-        req.decoded = decoded;
-        next();
-    })
-}
+//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+//         if (err) {
+//             return res.status(401).send({ error: true, message: 'unauthorized access' })
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
+// }
 
 
 
@@ -57,6 +57,7 @@ async function run() {
 
         const categoryCollection = client.db("petAdoptation").collection("category");
         const petsCollection = client.db("petAdoptation").collection("pets");
+        const usersCollection = client.db("petAdoptation").collection("users");
         const adoptPetsCollection = client.db("petAdoptation").collection("adoptPets");
         const createDonationCollection = client.db("petAdoptation").collection("createDonation");
 
@@ -81,10 +82,31 @@ async function run() {
         })
 
         // delete donation campaigns api
-        app.delete('/createdonation/:id', async(req,res) =>{
+        app.delete('/createdonation/:id', async (req, res) => {
             const id = req.params.id;
-           const query = { _id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await createDonationCollection.deleteOne(query);
+            res.send(result);
+        })
+        // update donation data id
+        app.patch('/createdonation/:id', async (req, res) => {
+            const id = req.params.id
+            const pet = req.body
+            const filter = { _id: new ObjectId(id) }
+            // console.log(id,pet)
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name: pet.name,
+                    maximumAmount: pet.maximumAmount,
+                    lastDate: pet.lastDate,
+                    short_details: pet.short_details,
+                    long_details: pet.long_details,
+                    photo: pet.photo,
+                    date: pet.date
+                },
+            };
+            const result = await createDonationCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
 
@@ -113,6 +135,53 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
+        // user api
+        app.post('/users', async (req, res) => {
+            const item = req.body;
+            const result = await usersCollection.insertOne(item);
+            res.send(result);
+        });
+
+        app.patch("/users/admin/:id", async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    role: "admin"
+                },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result)
+
+        })
+
+        // user api get
+        app.get('/users', async (req, res) => {
+            const cursor = usersCollection.find()
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.get('/users/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const cursor = usersCollection.find(query)
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let admin = false;
+            if (user) {
+                admin = user?.role === 'admin';
+            }
+            res.send({ admin });
+        })
+
         app.get('/pets/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -120,10 +189,34 @@ async function run() {
             res.send(result);
         });
 
+        // update pet data id
+        app.patch('/pets/:id', async (req, res) => {
+            const id = req.params.id
+            const pet = req.body
+            const filter = { _id: new ObjectId(id) }
+            // console.log(id,pet)
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    // quantity: book.quantity
+                    name: pet.name,
+                    age: pet.age,
+                    category: pet.category,
+                    location: pet.location,
+                    short_details: pet.short_details,
+                    long_details: pet.long_details,
+                    photo: pet.photo
+                },
+            };
+            const result = await petsCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
+
+
         // delete pets from data base
-        app.delete('/pets/:id', async(req,res) =>{
+        app.delete('/pets/:id', async (req, res) => {
             const id = req.params.id;
-           const query = { _id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await petsCollection.deleteOne(query);
             res.send(result);
         })
