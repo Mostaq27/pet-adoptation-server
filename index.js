@@ -32,12 +32,7 @@ app.use(express.json());
 
 
 
-// console.log(process.env.DB_USER)
-// console.log(process.env.DB_PASS)
 
-
-
-// const uri = `mongodb+srv://petAdoptation:UEyiTAzzNamRuuKF@cluster0.1gxcng8.mongodb.net/?retryWrites=true&w=majority`;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1gxcng8.mongodb.net/?retryWrites=true&w=majority`;
 
 
