@@ -239,14 +239,14 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    // quantity: book.quantity
                     name: pet.name,
                     age: pet.age,
                     category: pet.category,
                     location: pet.location,
                     short_details: pet.short_details,
                     long_details: pet.long_details,
-                    photo: pet.photo
+                    photo: pet.photo,
+                    adopted: pet.false,
                 },
             };
             const result = await petsCollection.updateOne(filter, updateDoc, options);
